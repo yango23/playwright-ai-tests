@@ -1,0 +1,17 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.trace/
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+
+# VS Code
+.vscode/
