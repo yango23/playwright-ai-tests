@@ -21,13 +21,13 @@ npm ci
 Run the full test suite:
 
 ```powershell
-npx playwright test
+npm test
 ```
 
 Run a single spec:
 
 ```powershell
-npx playwright test tests/todomvc/todo.spec.ts
+npm run test:spec
 ```
 
 Run a single test by name (grep):
@@ -39,7 +39,7 @@ npx playwright test --grep "editing existing todo updates the task name"
 View the HTML report:
 
 ```powershell
-npx playwright show-report
+npm run report
 ```
 
 Debug (headed mode):
