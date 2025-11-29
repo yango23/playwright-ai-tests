@@ -17,6 +17,22 @@ export class TodoPage {
     }
 
     /**
+     * Reset application storage and reload the app (useful between tests)
+     */
+    async reset() {
+        // Navigate to the app first so the origin matches before clearing localStorage
+        await this.open();
+        try {
+            await this.page.evaluate(() => localStorage.clear());
+            // reload so the app picks up the cleared storage
+            await this.page.reload();
+            await this.waitForAppReady();
+        } catch (e) {
+            // swallow security errors and proceed; open() + waitForAppReady should be sufficient
+        }
+    }
+
+    /**
      * Wait for the app to be ready by waiting for the input, filters, and clear button
      */
     async waitForAppReady() {
