@@ -11,42 +11,7 @@ This repository contains a Playwright-based end-to-end testing suite for a TodoM
 ## Getting started
 Prerequisites: Node.js and npm installed
 
-Install dependencies:
-
-```powershell
-cd f:\ai-qa-project
-npm ci
-```
-
-Run the full test suite:
-
-```powershell
-npm test
-```
-
-Run a single spec:
-
-```powershell
-npm run test:spec
-```
-
-Run a single test by name (grep):
-
-```powershell
-npx playwright test --grep "editing existing todo updates the task name"
-```
-
-View the HTML report:
-
-```powershell
-npm run report
-```
-
-Debug (headed mode):
-
-```powershell
-npx playwright test --headed --debug
-```
+Install dependencies and run tests using npm scripts defined in `package.json`.
 
 ## Test patterns and conventions
 - Use Page Objects in `pages/` to encapsulate selectors and UI flows. Tests should call POM methods instead of raw locators in tests.
