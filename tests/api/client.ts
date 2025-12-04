@@ -144,7 +144,21 @@ export class ApiClient {
    */
   async getUsersJson(): Promise<JsonResult<User[]>> {
     const response = await this.getUsers();
-    const data = (await response.json()) as User[];
+    // Defensive parsing: read raw text and attempt to parse JSON so we can
+    // surface parsing errors or unexpected payloads in test logs.
+    const text = await response.text();
+    let data: User[];
+    try {
+      data = JSON.parse(text) as User[];
+    } catch (e) {
+      // Attach helpful debug info to make failures easier to diagnose in CI.
+      // We don't throw here because tests prefer to assert on response content,
+      // but returning undefined will fail downstream assertions and provide logs.
+      // Log to stderr so it shows up in Playwright output.
+      // eslint-disable-next-line no-console
+      console.error('Failed to parse JSON from GET /users', { status: response.status(), text: text.slice(0, 100) });
+      data = undefined as unknown as User[];
+    }
     return { response, data };
   }
 
@@ -156,7 +170,15 @@ export class ApiClient {
    */
   async getUserJson(id: number): Promise<JsonResult<User>> {
     const response = await this.getUser(id);
-    const data = (await response.json()) as User;
+    const text = await response.text();
+    let data: User;
+    try {
+      data = JSON.parse(text) as User;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to parse JSON from GET /users/' + id, { status: response.status(), text: text.slice(0, 100) });
+      data = undefined as unknown as User;
+    }
     return { response, data };
   }
 
