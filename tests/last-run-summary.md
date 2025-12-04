@@ -1,13 +1,13 @@
 Playwright test run summary
 
-Date: 2025-12-05
+Date: 2025-12-05 (updated)
 
 Command: npx playwright test
 
-Results:
-- Total tests run: 75
-- Passed: 69
-- Skipped: 6
+Results (focused `tests/users.spec.ts` run):
+- Total tests run: 27
+- Passed: 27
+- Skipped: 0
 - Failed: 0
 
-All tests passed. HTML report available via `npx playwright show-report`.
+Note: The project's hierarchy changed; updated imports to use explicit paths to `api/client.ts` from tests.
