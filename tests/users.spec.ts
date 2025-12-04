@@ -1,50 +1,67 @@
 // tests/api/users.spec.ts
 //
 // API-тесты к публичному jsonplaceholder.
-// Здесь мы показываем, что умеем:
-//  - пользоваться ApiClient
-//  - выносить общие проверки в хелперы
-//  - делать параметризованные тесты (одна логика, разные данные)
+// Здесь главное — показать умение:
+// - пользоваться ApiClient
+// - писать хелперы для ассертов
+// - делать параметризованные тесты (одна логика, много данных)
+// - использовать кастомную фикстуру apiClient
 
-import { test, expect } from '@playwright/test';
-import type { APIResponse } from '@playwright/test';
-import { ApiClient, type User, type Post } from '../api/client.ts';
+import { test as base, expect } from '@playwright/test';
+import { ApiClient, User, Post } from '../api/client.ts';
 
-// Простая проверка: строка "похожа" на e-mail.
-// Для реального проекта можно сделать строже, но для учебного репо этого достаточно.
+// ─────────────────────────────────────────────
+// Кастомные фикстуры
+// ─────────────────────────────────────────────
+
+// Тип для наших дополнительных фикстур
+type ApiFixtures = {
+  /**
+   * Готовый API-клиент для jsonplaceholder.
+   * Создаётся заново для КАЖДОГО теста.
+   */
+  apiClient: ApiClient;
+};
+
+// Расширяем базовый test так, чтобы в каждом тесте
+// был доступен apiClient через параметры.
+const test = base.extend<ApiFixtures>({
+  apiClient: async ({ request }, use) => {
+    const client = new ApiClient(request);
+    await use(client);
+    // Здесь можно было бы добавить "после теста" очистку, если нужна
+  },
+});
+
+// Простая проверка: строка похожа на e-mail.
+// Для учебных целей этого достаточно.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ─────────────────────────────────────────────────────────────────────────
-// Общие хелперы
-// ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Хелперы
+// ─────────────────────────────────────────────
 
-/**
- * Базовая проверка успешного JSON-ответа:
- *  - статус == expectedStatus
- *  - response.ok() === true
- *  - content-type содержит application/json
- *
- * ВАЖНО: здесь мы НЕ читаем тело ответа (не вызываем json()/text()),
- * чтобы не "съесть" стрим до того, как его распарсят другие хелперы.
- */
+// Хелпер: проверяем, что ответ успешный и имеет JSON content-type.
+// IMPORTANT: этот хелпер НАМЕРЕННО НЕ парсит тело ответа,
+// потому что APIResponse.json()/text() можно вызвать только один раз.
+// Здесь мы проверяем только статус и заголовки, а JSON парсим в тестах
+// или в методах ApiClient.
 async function expectJsonResponse(
-  response: APIResponse,
+  response: Awaited<ReturnType<ApiClient['getUsers']>>,
   expectedStatus = 200,
 ): Promise<void> {
-  // HTTP-статус
+  // Проверяем HTTP-статус
   expect(response.status(), 'HTTP status').toBe(expectedStatus);
 
-  // Для 2xx/3xx ok() должен быть true
+  // Playwright-флаг ok() должен быть true для 2xx–3xx.
   expect(response.ok(), 'response.ok()').toBeTruthy();
 
-  // Заголовок content-type
+  // Проверяем заголовок content-type (не парсим тело здесь)
   const contentType = response.headers()['content-type'] ?? '';
   expect(contentType).toContain('application/json');
 }
 
-/**
- * Базовая проверка массива пользователей.
- */
+// Хелпер: базовая проверка массива пользователей.
 function expectUsersArray(users: User[]) {
   expect(Array.isArray(users), 'users should be an array').toBe(true);
   expect(users.length).toBeGreaterThan(0);
@@ -58,124 +75,117 @@ function expectUsersArray(users: User[]) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Наборы данных для параметризованных тестов
-// ─────────────────────────────────────────────────────────────────────────
-
-/**
- * Пользовательские ID, которые мы считаем "валидными" для демо-API.
- * Для каждого id будет создан отдельный тест.
- */
-const USER_IDS = [1, 2, 3, 4, 5];
-
-/**
- * Набор вариантов payload'ов для POST /posts.
- * Каждый элемент превратится в отдельный тест.
- */
-const POST_CASES: Array<{
-  name: string;            // человеко-читаемое имя кейса
-  payload: Omit<Post, 'id'>;
-}> = [
-  {
-    name: 'простой пост для userId=1',
-    payload: {
-      userId: 1,
-      title: 'Smoke test post',
-      body: 'This is a test post for portfolio #1',
-    },
-  },
-  {
-    name: 'ещё один пост для userId=2',
-    payload: {
-      userId: 2,
-      title: 'Another API test',
-      body: 'Second test body for portfolio.',
-    },
-  },
-];
-
-// ─────────────────────────────────────────────────────────────────────────
-// Набор тестов
-// ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Тесты
+// ─────────────────────────────────────────────
 
 test.describe('Users API (jsonplaceholder)', () => {
+  // ─────────────────────────────────────────────
   // 1) БАЗОВЫЙ ТЕСТ: список пользователей
+  // ─────────────────────────────────────────────
   test('GET /users возвращает валидный список пользователей', async ({
-    request,
+    apiClient,
   }) => {
-    const client = new ApiClient(request);
+    // Берём JSON через удобный high-level helper
+    const { response, data: users } = await apiClient.getUsersJson();
 
-    // Берём JSON через "высокоуровневый" метод клиента
-    const { response, data: users } = await client.getUsersJson();
-
-    // Общие проверки ответа (статус + заголовки)
+    // Общие проверки ответа
     await expectJsonResponse(response);
 
     // Проверяем структуру массива
     expectUsersArray(users);
   });
 
+  // ─────────────────────────────────────────────
   // 2) ПАРАМЕТРИЗОВАННЫЕ ТЕСТЫ: GET /users/:id
   //
-  // ЛОГИКА одна:
-  //   - запросили пользователя по id
-  //   - убедились, что всё ок и пришёл именно этот id
+  // ЛОГИКА одна и та же:
+  //   - запросить пользователя по id
+  //   - проверить статус, JSON, поля
   //
-  // МЕНЯЮТСЯ только данные (id), поэтому вместо копипасты
-  // мы проходимся по USER_IDS и создаём тесты в цикле.
+  // МЕНЯЮТСЯ только данные: id.
+  // Вместо копипасты — цикл по массиву USER_IDS.
+  // ─────────────────────────────────────────────
+
+  const USER_IDS = [1, 2, 3, 4, 5];
+
   for (const id of USER_IDS) {
     test(`GET /users/${id} возвращает корректного пользователя`, async ({
-      request,
+      apiClient,
     }) => {
-      const client = new ApiClient(request);
+      const { response, data: user } = await apiClient.getUserJson(id);
 
-      const { response, data: user } = await client.getUserJson(id);
-
+      // Проверяем, что ответ успешный и это JSON
       await expectJsonResponse(response);
 
+      // Проверяем, что вернулся нужный пользователь
       expect(user.id).toBe(id);
       expect(typeof user.name).toBe('string');
       expect(typeof user.username).toBe('string');
       expect(user.email).toMatch(EMAIL_REGEX);
     });
   }
-  // В репорте Playwright это будут несколько отдельных тестов
-  // с разными названиями, но общей логикой.
 
+  // В раннере Playwright это будут ПЯТЬ отдельных тестов
+  // с разными названиями, но с общей логикой.
+
+  // ─────────────────────────────────────────────
   // 3) НЕГАТИВНЫЙ ТЕСТ: несуществующий пользователь
+  // ─────────────────────────────────────────────
   test('GET /users/:id возвращает 404 для несуществующего id', async ({
-    request,
+    apiClient,
   }) => {
-    const client = new ApiClient(request);
-
     // Берём заведомо "нереальный" ID.
-    const response = await client.getUser(99999);
+    const response = await apiClient.getUser(99999);
 
-    // Здесь нам важно только то, что ресурс не найден.
+    // Здесь нам не нужно тело ответа — только статус.
     expect(response.status()).toBe(404);
   });
 
-  // 4) ПАРАМЕТРИЗОВАННЫЕ ТЕСТЫ: POST /posts
+  // ─────────────────────────────────────────────
+  // 4) ПАРАМЕТРИЗОВАННЫЕ POST-ТЕСТЫ: /posts
   //
-  // Мы создаём несколько постов с разными payload'ами, но
-  // проверяем одну и ту же логику.
-  for (const { name, payload } of POST_CASES) {
-    test(`POST /posts: ${name}`, async ({ request }) => {
-      const client = new ApiClient(request);
+  // Проверяем, что API создаёт посты с разными payload'ами.
+  // ─────────────────────────────────────────────
 
-      const { response, data: post } = await client.createPostJson(payload);
+  // Набор вариантов данных для создания постов
+  const POST_CASES: Array<{
+    name: string; // читаемое имя кейса для названия теста
+    payload: Omit<Post, 'id'>;
+  }> = [
+    {
+      name: 'простой пост для userId=1',
+      payload: {
+        userId: 1,
+        title: 'Smoke test post',
+        body: 'This is a test post for portfolio #1',
+      },
+    },
+    {
+      name: 'ещё один пост для userId=2',
+      payload: {
+        userId: 2,
+        title: 'Another API test',
+        body: 'Second test body for portfolio.',
+      },
+    },
+  ];
+
+  for (const { name, payload } of POST_CASES) {
+    test(`POST /posts: ${name}`, async ({ apiClient }) => {
+      const { response, data: post } = await apiClient.createPostJson(payload);
 
       // Для jsonplaceholder успешный POST = 201
       await expectJsonResponse(response, 201);
 
-      // Сервер должен вернуть те же данные, что мы отправили
+      // Проверяем, что сервер вернул то же, что мы отправили
       expect(post).toMatchObject({
         userId: payload.userId,
         title: payload.title,
         body: payload.body,
       });
 
-      // И выдать какой-то id (само число нам не важно)
+      // И выдал какой-то id (нам важен факт, а не конкретное число)
       expect(typeof post.id).toBe('number');
     });
   }
