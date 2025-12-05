@@ -1,6 +1,6 @@
-import { uiTest as test } from '../fixtures';
+import { uiTest as test, type UiFixtures } from '@ui/fixtures';
 
-test.describe('smoke tests', () => {
+test.describe<[UiFixtures]>('smoke tests', () => {
   test('can add a task', async ({ todoPage }) => {
     // todoPage is already initialized and opened via fixture
     await todoPage.addTask('SmokeTask');

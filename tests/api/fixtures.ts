@@ -1,3 +1,6 @@
+export type ApiFixtures = {
+  apiClient: import('./client').ApiClient;
+};
 // tests/api/fixtures.ts
 //
 // Общая фикстура для API-тестов.

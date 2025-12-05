@@ -6,7 +6,7 @@
 import { test as base, expect } from '@playwright/test';
 import { TodoPage } from '../../pages/TodoPage';
 
-type UiFixtures = {
+export type UiFixtures = {
   todoPage: TodoPage;
 };
 
