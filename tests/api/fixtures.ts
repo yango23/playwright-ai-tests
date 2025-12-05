@@ -9,9 +9,6 @@ export type ApiFixtures = {
 import { test as base, expect } from '@playwright/test';
 import { ApiClient } from './client';
 
-type ApiFixtures = {
-  apiClient: ApiClient;
-};
 
 const apiTest = base.extend<ApiFixtures>({
   apiClient: async ({ request }, use) => {
