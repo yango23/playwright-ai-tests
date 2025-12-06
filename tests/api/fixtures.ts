@@ -1,6 +1,3 @@
-export type ApiFixtures = {
-  apiClient: import('./client').ApiClient;
-};
 // tests/api/fixtures.ts
 //
 // Общая фикстура для API-тестов.
@@ -9,6 +6,9 @@ export type ApiFixtures = {
 import { test as base, expect } from '@playwright/test';
 import { ApiClient } from './client';
 
+export type ApiFixtures = {
+  apiClient: ApiClient;
+};
 
 const apiTest = base.extend<ApiFixtures>({
   apiClient: async ({ request }, use) => {
@@ -20,4 +20,3 @@ const apiTest = base.extend<ApiFixtures>({
 
 export { apiTest, expect };
 export { apiTest as test }; // Also export as 'test' for convenience
-export type { ApiFixtures };

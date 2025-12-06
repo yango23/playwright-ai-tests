@@ -23,4 +23,3 @@ const uiTest = base.extend<UiFixtures>({
 
 export { uiTest, expect };
 export { uiTest as test }; // Also export as 'test' for convenience
-export type { UiFixtures };

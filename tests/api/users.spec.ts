@@ -13,7 +13,7 @@
 // - писать хелперы для ассертов
 // - делать параметризованные тесты (одна логика, много данных)
 import { expect } from '@playwright/test';
-import { apiTest as test, type ApiFixtures } from '@api/fixtures';
+import { apiTest as test } from './fixtures';
 import type { User, Post } from './client';
 import { ApiClient } from './client';
 
@@ -48,7 +48,7 @@ function expectUsersArray(users: User[]) {
   }
 }
 
-test.describe<[ApiFixtures]>('[api][users] Users API (jsonplaceholder)', () => {
+test.describe('[api][users] Users API (jsonplaceholder)', () => {
   // ─────────────────────────────────────────────
   // 1) БАЗОВЫЙ ТЕСТ: список пользователей
   // ─────────────────────────────────────────────

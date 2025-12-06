@@ -1,13 +1,13 @@
 // tests/ui/todomvc/visual.spec.ts
 import { expect } from '@playwright/test';
-import { uiTest as test, type UiFixtures } from '@ui/fixtures';
+import { uiTest as test } from '../fixtures';
 
 // Теги:
 // [ui]        — UI-тест
 // [visual]    — визуальный/скриншотный
 // [snapshot]  — работает через toHaveScreenshot
 
-test.describe<[UiFixtures]>('[ui][visual] TodoMVC visual regression', () => {
+test.describe('[ui][visual] TodoMVC visual regression', () => {
   // Фиксируем размер окна, чтобы скриншоты были одинаковыми
   test.use({
     viewport: { width: 1280, height: 720 },

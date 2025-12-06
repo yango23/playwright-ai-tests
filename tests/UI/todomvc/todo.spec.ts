@@ -1,6 +1,5 @@
 // tests/ui/todomvc/todo.spec.ts
-import { expect } from '@playwright/test';
-import { uiTest as test, type UiFixtures } from '@ui/fixtures';
+import { uiTest as test } from '../fixtures';
 
 // Все тесты тут используют теговую схему:
 // [ui]     — UI-тест
@@ -8,7 +7,7 @@ import { uiTest as test, type UiFixtures } from '@ui/fixtures';
 // [smoke]  — быстрые базовые проверки
 // [regression] — более детальные/краевые кейсы
 
-test<[UiFixtures]>('[ui][todo][smoke] completed todos appear in Completed tab', async ({ todoPage }) => {
+test('[ui][todo][smoke] completed todos appear in Completed tab', async ({ todoPage }) => {
   await todoPage.addTask('TestTask');
   await todoPage.addTask('anotherTask');
 
@@ -21,14 +20,14 @@ test<[UiFixtures]>('[ui][todo][smoke] completed todos appear in Completed tab', 
   await todoPage.expectTaskVisible('anotherTask');
 });
 
-test<[UiFixtures]>('[ui][todo][smoke] new task is not shown in Completed tab', async ({ todoPage }) => {
+test('[ui][todo][smoke] new task is not shown in Completed tab', async ({ todoPage }) => {
   await todoPage.addTask('FreshTask');
 
   await todoPage.goToCompleted();
   await todoPage.expectTaskNotVisible('FreshTask');
 });
 
-test<[UiFixtures]>('[ui][todo][smoke] completed task does not appear in Active tab', async ({ todoPage }) => {
+test('[ui][todo][smoke] completed task does not appear in Active tab', async ({ todoPage }) => {
   await todoPage.addTask('Task1');
   await todoPage.completeTask('Task1');
 
@@ -39,7 +38,7 @@ test<[UiFixtures]>('[ui][todo][smoke] completed task does not appear in Active t
   await todoPage.expectTaskNotVisible('Task1');
 });
 
-test<[UiFixtures]>('[ui][todo][smoke] clear completed removes completed tasks', async ({ todoPage }) => {
+test('[ui][todo][smoke] clear completed removes completed tasks', async ({ todoPage }) => {
   await todoPage.createAndCompleteTasks('Task1', 'Task2');
 
   await todoPage.goToCompleted();
@@ -53,7 +52,7 @@ test<[UiFixtures]>('[ui][todo][smoke] clear completed removes completed tasks', 
   await todoPage.expectTaskNotVisible('Task2');
 });
 
-test<[UiFixtures]>('[ui][todo] deleted task disappears from the list', async ({ todoPage }) => {
+test('[ui][todo] deleted task disappears from the list', async ({ todoPage }) => {
   await todoPage.addTask('TaskToDelete');
 
   await todoPage.deleteTask('TaskToDelete');
@@ -61,7 +60,7 @@ test<[UiFixtures]>('[ui][todo] deleted task disappears from the list', async ({ 
   await todoPage.expectTaskNotVisible('TaskToDelete');
 });
 
-test<[UiFixtures]>('[ui][todo][regression] editing existing todo updates the task name', async ({ todoPage }) => {
+test('[ui][todo][regression] editing existing todo updates the task name', async ({ todoPage }) => {
   await todoPage.addTask('OriginalTask');
 
   await todoPage.editTask('OriginalTask', 'EditedTask');
@@ -70,7 +69,7 @@ test<[UiFixtures]>('[ui][todo][regression] editing existing todo updates the tas
   await todoPage.expectTaskNotVisible('OriginalTask');
 });
 
-test<[UiFixtures]>('[ui][todo][regression] editing todo to empty string removes the task', async ({ todoPage }) => {
+test('[ui][todo][regression] editing todo to empty string removes the task', async ({ todoPage }) => {
   await todoPage.addTask('TaskToClear');
 
   // Редактируем в пустую строку
@@ -80,7 +79,7 @@ test<[UiFixtures]>('[ui][todo][regression] editing todo to empty string removes 
   await todoPage.expectTaskNotVisible('TaskToClear');
 });
 
-test<[UiFixtures]>('[ui][todo][regression] editing todo trims leading and trailing spaces', async ({ todoPage }) => {
+test('[ui][todo][regression] editing todo trims leading and trailing spaces', async ({ todoPage }) => {
   await todoPage.addTask('TrimMe');
 
   // Добавляем лишние пробелы вокруг
@@ -90,7 +89,7 @@ test<[UiFixtures]>('[ui][todo][regression] editing todo trims leading and traili
   await todoPage.expectTaskVisible('TrimMe Edited');
 });
 
-test<[UiFixtures]>('[ui][todo] toggling completed todo returns it back to Active', async ({ todoPage }) => {
+test('[ui][todo] toggling completed todo returns it back to Active', async ({ todoPage }) => {
   await todoPage.addTask('RevertMe');
 
   await todoPage.completeTask('RevertMe');
@@ -105,7 +104,7 @@ test<[UiFixtures]>('[ui][todo] toggling completed todo returns it back to Active
   await todoPage.expectTaskVisible('RevertMe');
 });
 
-test<[UiFixtures]>('[ui][todo] clear completed does nothing when there are no completed tasks', async ({ todoPage }) => {
+test('[ui][todo] clear completed does nothing when there are no completed tasks', async ({ todoPage }) => {
   await todoPage.addTask('OnlyActive');
 
   // Кнопка Clear completed либо не видна, либо клик по ней не должен ничего ломать
