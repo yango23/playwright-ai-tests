@@ -13,7 +13,7 @@
 // - писать хелперы для ассертов
 // - делать параметризованные тесты (одна логика, много данных)
 import { expect } from '@playwright/test';
-import { apiTest as test } from './fixtures';
+import { apiTest as test } from '../fixtures/api';
 import type { User, Post } from './client';
 import { ApiClient } from './client';
 

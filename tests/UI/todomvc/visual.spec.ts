@@ -5,7 +5,7 @@
  * Tags: @ui @visual @snapshot
  */
 
-import { uiTest as test, expect } from '../../fixtures';
+import { uiTest as test, expect } from '../../fixtures/ui';
 
 test.describe('@ui @visual TodoMVC visual regression', () => {
   // Фиксируем размер окна, чтобы скриншоты были одинаковыми

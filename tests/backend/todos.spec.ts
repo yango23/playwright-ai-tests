@@ -11,7 +11,7 @@
  * - Updating and deleting todos
  */
 
-import { apiTest as test, expect } from '../fixtures';
+import { apiTest as test, expect } from '../fixtures/api';
 import { TodoFactory } from '../mocks/todoFactory';
 
 test.describe('@backend @api TodoMVC backend with randomized data', () => {

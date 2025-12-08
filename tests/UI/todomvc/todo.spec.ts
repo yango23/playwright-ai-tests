@@ -1,13 +1,42 @@
-// tests/ui/todomvc/todo.spec.ts
-import { uiTest as test } from '../fixtures';
+/**
+ * tests/UI/todomvc/todo.spec.ts
+ *
+ * TodoMVC UI functional tests (consolidated smoke + regression tests).
+ * Tags: @ui @todo @smoke @regression
+ * 
+ * These tests verify core TodoMVC functionality:
+ * - Adding, completing, editing, and deleting tasks
+ * - Filtering (All, Active, Completed)
+ * - Bulk operations (Clear Completed)
+ */
 
-// Все тесты тут используют теговую схему:
-// [ui]     — UI-тест
-// [todo]   — функционал TodoMVC
-// [smoke]  — быстрые базовые проверки
-// [regression] — более детальные/краевые кейсы
+import { uiTest as test } from '../../fixtures/ui';
 
-test('[ui][todo][smoke] completed todos appear in Completed tab', async ({ todoPage }) => {
+test.describe('@ui @todo TodoMVC core functionality', () => {
+  test('@smoke can add a task', async ({ todoPage }) => {
+    await todoPage.addTask('SmokeTask');
+    await todoPage.expectTaskVisible('SmokeTask');
+  });
+
+  test('@smoke can add and complete multiple tasks', async ({ todoPage }) => {
+    await todoPage.addTask('Smoke1');
+    await todoPage.addTask('Smoke2');
+
+    await todoPage.completeTask('Smoke1');
+    await todoPage.completeTask('Smoke2');
+
+    await todoPage.goToCompleted();
+    await todoPage.expectTaskVisible('Smoke1');
+    await todoPage.expectTaskVisible('Smoke2');
+  });
+
+  test('@smoke can delete a task', async ({ todoPage }) => {
+    await todoPage.addTask('ToDelete');
+    await todoPage.deleteTask('ToDelete');
+    await todoPage.expectTaskNotVisible('ToDelete');
+  });
+
+  test('@smoke completed todos appear in Completed tab', async ({ todoPage }) => {
   await todoPage.addTask('TestTask');
   await todoPage.addTask('anotherTask');
 
@@ -20,14 +49,14 @@ test('[ui][todo][smoke] completed todos appear in Completed tab', async ({ todoP
   await todoPage.expectTaskVisible('anotherTask');
 });
 
-test('[ui][todo][smoke] new task is not shown in Completed tab', async ({ todoPage }) => {
+  test('@smoke new task is not shown in Completed tab', async ({ todoPage }) => {
   await todoPage.addTask('FreshTask');
 
   await todoPage.goToCompleted();
   await todoPage.expectTaskNotVisible('FreshTask');
 });
 
-test('[ui][todo][smoke] completed task does not appear in Active tab', async ({ todoPage }) => {
+  test('@smoke completed task does not appear in Active tab', async ({ todoPage }) => {
   await todoPage.addTask('Task1');
   await todoPage.completeTask('Task1');
 
@@ -38,7 +67,7 @@ test('[ui][todo][smoke] completed task does not appear in Active tab', async ({ 
   await todoPage.expectTaskNotVisible('Task1');
 });
 
-test('[ui][todo][smoke] clear completed removes completed tasks', async ({ todoPage }) => {
+  test('@smoke clear completed removes completed tasks', async ({ todoPage }) => {
   await todoPage.createAndCompleteTasks('Task1', 'Task2');
 
   await todoPage.goToCompleted();
@@ -52,7 +81,7 @@ test('[ui][todo][smoke] clear completed removes completed tasks', async ({ todoP
   await todoPage.expectTaskNotVisible('Task2');
 });
 
-test('[ui][todo] deleted task disappears from the list', async ({ todoPage }) => {
+  test('@regression deleted task disappears from the list', async ({ todoPage }) => {
   await todoPage.addTask('TaskToDelete');
 
   await todoPage.deleteTask('TaskToDelete');
@@ -60,7 +89,7 @@ test('[ui][todo] deleted task disappears from the list', async ({ todoPage }) =>
   await todoPage.expectTaskNotVisible('TaskToDelete');
 });
 
-test('[ui][todo][regression] editing existing todo updates the task name', async ({ todoPage }) => {
+  test('@regression editing existing todo updates the task name', async ({ todoPage }) => {
   await todoPage.addTask('OriginalTask');
 
   await todoPage.editTask('OriginalTask', 'EditedTask');
@@ -69,47 +98,32 @@ test('[ui][todo][regression] editing existing todo updates the task name', async
   await todoPage.expectTaskNotVisible('OriginalTask');
 });
 
-test('[ui][todo][regression] editing todo to empty string removes the task', async ({ todoPage }) => {
-  await todoPage.addTask('TaskToClear');
+  test('@regression editing todo to empty string removes the task', async ({ todoPage }) => {
+    await todoPage.addTask('TaskToClear');
+    await todoPage.editTask('TaskToClear', '');
+    await todoPage.expectTaskNotVisible('TaskToClear');
+  });
 
-  // Редактируем в пустую строку
-  await todoPage.editTask('TaskToClear', '');
+  test('@regression editing todo trims leading and trailing spaces', async ({ todoPage }) => {
+    await todoPage.addTask('TrimMe');
+    await todoPage.editTask('TrimMe', '   TrimMe Edited   ');
+    await todoPage.expectTaskVisible('TrimMe Edited');
+  });
 
-  // В классическом TodoMVC такая задача удаляется
-  await todoPage.expectTaskNotVisible('TaskToClear');
-});
+  test('@regression toggling completed todo returns it back to Active', async ({ todoPage }) => {
+    await todoPage.addTask('RevertMe');
+    await todoPage.completeTask('RevertMe');
+    await todoPage.goToCompleted();
+    await todoPage.expectTaskVisible('RevertMe');
+    await todoPage.toggleTask('RevertMe');
+    await todoPage.goToActive();
+    await todoPage.expectTaskVisible('RevertMe');
+  });
 
-test('[ui][todo][regression] editing todo trims leading and trailing spaces', async ({ todoPage }) => {
-  await todoPage.addTask('TrimMe');
-
-  // Добавляем лишние пробелы вокруг
-  await todoPage.editTask('TrimMe', '   TrimMe Edited   ');
-
-  // Ожидаем, что в UI отображается уже без мусорных пробелов
-  await todoPage.expectTaskVisible('TrimMe Edited');
-});
-
-test('[ui][todo] toggling completed todo returns it back to Active', async ({ todoPage }) => {
-  await todoPage.addTask('RevertMe');
-
-  await todoPage.completeTask('RevertMe');
-
-  await todoPage.goToCompleted();
-  await todoPage.expectTaskVisible('RevertMe');
-
-  // Возвращаем обратно (toggle)
-  await todoPage.toggleTask('RevertMe');
-
-  await todoPage.goToActive();
-  await todoPage.expectTaskVisible('RevertMe');
-});
-
-test('[ui][todo] clear completed does nothing when there are no completed tasks', async ({ todoPage }) => {
-  await todoPage.addTask('OnlyActive');
-
-  // Кнопка Clear completed либо не видна, либо клик по ней не должен ничего ломать
-  await todoPage.clearCompleted();
-
-  await todoPage.goToAll();
-  await todoPage.expectTaskVisible('OnlyActive');
+  test('@regression clear completed does nothing when there are no completed tasks', async ({ todoPage }) => {
+    await todoPage.addTask('OnlyActive');
+    await todoPage.clearCompleted();
+    await todoPage.goToAll();
+    await todoPage.expectTaskVisible('OnlyActive');
+  });
 });
