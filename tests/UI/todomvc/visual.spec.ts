@@ -1,13 +1,13 @@
-// tests/ui/todomvc/visual.spec.ts
-import { expect } from '@playwright/test';
-import { uiTest as test } from '../fixtures';
+/**
+ * tests/UI/todomvc/visual.spec.ts
+ *
+ * Visual regression tests for TodoMVC.
+ * Tags: @ui @visual @snapshot
+ */
 
-// Теги:
-// [ui]        — UI-тест
-// [visual]    — визуальный/скриншотный
-// [snapshot]  — работает через toHaveScreenshot
+import { uiTest as test, expect } from '../../fixtures';
 
-test.describe('[ui][visual] TodoMVC visual regression', () => {
+test.describe('@ui @visual TodoMVC visual regression', () => {
   // Фиксируем размер окна, чтобы скриншоты были одинаковыми
   test.use({
     viewport: { width: 1280, height: 720 },
@@ -20,14 +20,14 @@ test.describe('[ui][visual] TodoMVC visual regression', () => {
     await todoPage.reset();
   });
 
-  test('[ui][visual][snapshot] empty app looks correct', async ({ page }) => {
+  test('@snapshot empty app looks correct', async ({ page }) => {
     await expect(page).toHaveScreenshot('todomvc-empty.png', {
       fullPage: true,
       maxDiffPixels: 50,
     });
   });
 
-  test('[ui][visual][snapshot] app with few active tasks', async ({ todoPage, page }) => {
+  test('@snapshot app with few active tasks', async ({ todoPage, page }) => {
     await todoPage.addTask('Buy milk');
     await todoPage.addTask('Walk the dog');
 
